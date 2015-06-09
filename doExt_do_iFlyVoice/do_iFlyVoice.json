@@ -1,0 +1,42 @@
+{
+  "ID": "do_iFlyVoice",
+  "IsContainer": "0",
+  "Type": "SM",
+  "Name": "讯飞语音",
+  "Version": "Internal",
+  "Description": "集成讯飞提供的语音识别类",
+  "Icon": "",
+  "IOS": {
+    "Support": 0,
+    "MinVersion": ""
+  },
+  "Android": {
+    "Support": 0,
+    "MinVersion": ""
+  },
+  "Windows": {
+    "Support": 0,
+    "MinVersion": ""
+  },
+  "WindowsPhone": {
+    "Support": 0,
+    "MinVersion": ""
+  },
+  "Html": {
+    "Support": 1,
+    "MinVersion": "5.0"
+  },
+  "Properties": [],
+  "Events": [],
+  "syncMethodes": [],
+  "asyncMethodes": [
+    {
+      "ID": "open",
+      "Name": "打开语音识别功能",
+      "Description": "",
+      "ReturnType": "Node",
+      "ReturnDesc": "{\\\"result\\\":\\\"你好\\\",\\\"spell\\\":\\\"nihao\\\",\\\"errorMsg\\\":\\\"\\\"}",
+      "Paras": []
+    }
+  ]
+}

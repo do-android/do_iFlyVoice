@@ -1,0 +1,9 @@
+*.class
+*.apk
+bin/
+gen/
+.settings/
+proguard/
+*.classpath
+/doExt_do_iFlyVoice/libs/docore.jar
+/doExt_do_iFlyVoice/do_build.xml
