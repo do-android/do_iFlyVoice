@@ -7,3 +7,4 @@ proguard/
 *.classpath
 /doExt_do_iFlyVoice/libs/docore.jar
 /doExt_do_iFlyVoice/do_build.xml
+/doExt_do_iFlyVoice/do_iFlyVoice.zip
