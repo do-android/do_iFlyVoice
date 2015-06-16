@@ -107,7 +107,12 @@ public class do_iFlyVoice_Model extends DoSingletonModule implements do_iFlyVoic
 		setParam();
 
 		mIatDialog.setListener(new MyListener(_scriptEngine, _callbackFuncName));
-		mIatDialog.show();
+		DoServiceContainer.getPageViewFactory().getAppContext().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				mIatDialog.show();
+			}
+		});
 
 	}
 
