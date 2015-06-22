@@ -93,23 +93,23 @@ public class do_iFlyVoice_Model extends DoSingletonModule implements do_iFlyVoic
 	 * @_callbackFuncName 回调函数名
 	 */
 	@Override
-	public void open(JSONObject _dictParas, DoIScriptEngine _scriptEngine, String _callbackFuncName) {
-		Activity _activity = DoServiceContainer.getPageViewFactory().getAppContext();
+	public void open(JSONObject _dictParas, final DoIScriptEngine _scriptEngine, final String _callbackFuncName) {
+		final Activity _activity = DoServiceContainer.getPageViewFactory().getAppContext();
 		SpeechUtility.createUtility(_activity, "appid=55750a2b");
-
-		// 初始化识别无UI识别对象
-		// 使用SpeechRecognizer对象，可根据回调消息自定义界面；
-		mIat = SpeechRecognizer.createRecognizer(_activity, mInitListener);
-		// 初始化听写Dialog，如果只使用有UI听写功能，无需创建SpeechRecognizer
-		// 使用UI听写功能，请根据sdk文件目录下的notice.txt,放置布局文件和图片资源
-		mIatDialog = new RecognizerDialog(_activity, mInitListener);
-		// 设置参数
-		setParam();
-
-		mIatDialog.setListener(new MyListener(_scriptEngine, _callbackFuncName));
 		DoServiceContainer.getPageViewFactory().getAppContext().runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
+				// 初始化识别无UI识别对象
+				// 使用SpeechRecognizer对象，可根据回调消息自定义界面；
+				mIat = SpeechRecognizer.createRecognizer(_activity, mInitListener);
+				// 初始化听写Dialog，如果只使用有UI听写功能，无需创建SpeechRecognizer
+				// 使用UI听写功能，请根据sdk文件目录下的notice.txt,放置布局文件和图片资源
+				mIatDialog = new RecognizerDialog(_activity, mInitListener);
+				// 设置参数
+				setParam();
+
+				mIatDialog.setListener(new MyListener(_scriptEngine, _callbackFuncName));
+
 				mIatDialog.show();
 			}
 		});
