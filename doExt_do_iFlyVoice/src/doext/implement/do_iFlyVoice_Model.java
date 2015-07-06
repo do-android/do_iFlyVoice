@@ -12,7 +12,8 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import android.app.Activity;
-import android.os.Environment;
+import android.os.Bundle;
+import android.text.TextUtils;
 import android.widget.Toast;
 
 import com.iflytek.cloud.ErrorCode;
@@ -21,11 +22,14 @@ import com.iflytek.cloud.RecognizerResult;
 import com.iflytek.cloud.SpeechConstant;
 import com.iflytek.cloud.SpeechError;
 import com.iflytek.cloud.SpeechRecognizer;
+import com.iflytek.cloud.SpeechSynthesizer;
 import com.iflytek.cloud.SpeechUtility;
+import com.iflytek.cloud.SynthesizerListener;
 import com.iflytek.cloud.ui.RecognizerDialog;
 import com.iflytek.cloud.ui.RecognizerDialogListener;
 
 import core.DoServiceContainer;
+import core.helper.DoJsonHelper;
 import core.interfaces.DoIScriptEngine;
 import core.object.DoInvokeResult;
 import core.object.DoSingletonModule;
@@ -39,6 +43,8 @@ import doext.define.do_iFlyVoice_IMethod;
  * DoInvokeResult(this.getUniqueKey());
  */
 public class do_iFlyVoice_Model extends DoSingletonModule implements do_iFlyVoice_IMethod {
+
+	private String savaPath;
 
 	public do_iFlyVoice_Model() throws Exception {
 		super();
@@ -54,8 +60,135 @@ public class do_iFlyVoice_Model extends DoSingletonModule implements do_iFlyVoic
 	 */
 	@Override
 	public boolean invokeSyncMethod(String _methodName, JSONObject _dictParas, DoIScriptEngine _scriptEngine, DoInvokeResult _invokeResult) throws Exception {
-		// ...do something
+		if ("speak".equals(_methodName)) {
+			this.speak(_dictParas, _scriptEngine, _invokeResult);
+			return true;
+		}
+		if ("pause".equals(_methodName)) { // 暂停播放
+			this.pause(_dictParas, _scriptEngine, _invokeResult);
+			return true;
+		}
+		if ("resume".equals(_methodName)) { // 继续播放
+			this.resume(_dictParas, _scriptEngine, _invokeResult);
+			return true;
+		}
+		if ("stop".equals(_methodName)) {
+			this.stop(_dictParas, _scriptEngine, _invokeResult);
+			return true;
+		}
 		return super.invokeSyncMethod(_methodName, _dictParas, _scriptEngine, _invokeResult);
+	}
+
+	// 语音合成对象
+	private SpeechSynthesizer mTts;
+
+	@Override
+	public void speak(JSONObject _dictParas, DoIScriptEngine _scriptEngine, DoInvokeResult _invokeResult) throws Exception {
+		final Activity _activity = DoServiceContainer.getPageViewFactory().getAppContext();
+		savaPath = _scriptEngine.getCurrentApp().getDataFS().getRootPath() + "/temp/do_iFlyVoic/";
+		SpeechUtility.createUtility(_activity, "appid=55750a2b");
+		// 初始化合成对象
+		mTts = SpeechSynthesizer.createSynthesizer(_activity, mInitListener);
+
+		String _text = DoJsonHelper.getString(_dictParas, "text", "");
+		if (TextUtils.isEmpty(_text))
+			return;
+		String _role = DoJsonHelper.getString(_dictParas, "role", "xiaoyan");
+		if (TextUtils.isEmpty(_role))
+			_role = "xiaoyan";
+		setTTSParam(_role);
+		mTts.startSpeaking(_text, mTtsListener);
+
+	}
+
+	private void setTTSParam(String _role) {
+		// 清空参数
+		mTts.setParameter(SpeechConstant.PARAMS, null);
+		// 根据合成引擎设置相应参数
+		mTts.setParameter(SpeechConstant.ENGINE_TYPE, SpeechConstant.TYPE_CLOUD);
+		// 设置在线合成发音人
+		mTts.setParameter(SpeechConstant.VOICE_NAME, _role);
+		// 设置合成语速
+		mTts.setParameter(SpeechConstant.SPEED, "50");
+		// 设置合成音调
+		mTts.setParameter(SpeechConstant.PITCH, "50");
+		// 设置合成音量
+		mTts.setParameter(SpeechConstant.VOLUME, "50");
+		// 设置播放器音频流类型
+		mTts.setParameter(SpeechConstant.STREAM_TYPE, "3");
+		// 设置播放合成音频打断音乐播放，默认为true
+		mTts.setParameter(SpeechConstant.KEY_REQUEST_FOCUS, "true");
+		// 设置合成音频保存路径，设置路径为sd卡请注意WRITE_EXTERNAL_STORAGE权限
+		mTts.setParameter(SpeechConstant.PARAMS, "tts_audio_path=" + savaPath + "deviceone_speck.pcm");
+	}
+
+	/**
+	 * 合成回调监听。
+	 */
+	private SynthesizerListener mTtsListener = new SynthesizerListener() {
+		@Override
+		public void onSpeakBegin() {
+			getEventCenter().fireEvent("bengin", new DoInvokeResult(getUniqueKey()));
+		}
+
+		@Override
+		public void onSpeakPaused() {
+			getEventCenter().fireEvent("paused", new DoInvokeResult(getUniqueKey()));
+		}
+
+		@Override
+		public void onSpeakResumed() {
+			getEventCenter().fireEvent("resumed", new DoInvokeResult(getUniqueKey()));
+		}
+
+		@Override
+		public void onBufferProgress(int percent, int beginPos, int endPos, String info) {
+			// 合成进度
+//			mPercentForBuffering = percent;
+//			showTip(String.format(getString(R.string.tts_toast_format), mPercentForBuffering, mPercentForPlaying));
+		}
+
+		@Override
+		public void onSpeakProgress(int percent, int beginPos, int endPos) {
+			// 播放进度
+//			mPercentForPlaying = percent;
+//			showTip(String.format(getString(R.string.tts_toast_format), mPercentForBuffering, mPercentForPlaying));
+		}
+
+		@Override
+		public void onCompleted(SpeechError error) {
+			DoInvokeResult _result = new DoInvokeResult(getUniqueKey());
+			if (error != null) {
+				_result.setError(error.getPlainDescription(true));
+			}
+			getEventCenter().fireEvent("finished", _result);
+		}
+
+		@Override
+		public void onEvent(int eventType, int arg1, int arg2, Bundle obj) {
+
+		}
+	};
+
+	@Override
+	public void pause(JSONObject _dictParas, DoIScriptEngine _scriptEngine, DoInvokeResult _invokeResult) throws Exception {
+		if (mTts != null) {
+			mTts.pauseSpeaking();
+		}
+	}
+
+	@Override
+	public void resume(JSONObject _dictParas, DoIScriptEngine _scriptEngine, DoInvokeResult _invokeResult) throws Exception {
+		if (mTts != null) {
+			mTts.resumeSpeaking();
+		}
+	}
+
+	@Override
+	public void stop(JSONObject _dictParas, DoIScriptEngine _scriptEngine, DoInvokeResult _invokeResult) throws Exception {
+		if (mTts != null) {
+			mTts.stopSpeaking();
+		}
 	}
 
 	/**
@@ -95,6 +228,7 @@ public class do_iFlyVoice_Model extends DoSingletonModule implements do_iFlyVoic
 	@Override
 	public void open(JSONObject _dictParas, final DoIScriptEngine _scriptEngine, final String _callbackFuncName) {
 		final Activity _activity = DoServiceContainer.getPageViewFactory().getAppContext();
+		savaPath = _scriptEngine.getCurrentApp().getDataFS().getRootPath() + "/temp/do_iFlyVoic/";
 		SpeechUtility.createUtility(_activity, "appid=55750a2b");
 		DoServiceContainer.getPageViewFactory().getAppContext().runOnUiThread(new Runnable() {
 			@Override
@@ -106,7 +240,7 @@ public class do_iFlyVoice_Model extends DoSingletonModule implements do_iFlyVoic
 				// 使用UI听写功能，请根据sdk文件目录下的notice.txt,放置布局文件和图片资源
 				mIatDialog = new RecognizerDialog(_activity, mInitListener);
 				// 设置参数
-				setParam();
+				setIATParam();
 
 				mIatDialog.setListener(new MyListener(_scriptEngine, _callbackFuncName));
 
@@ -180,13 +314,7 @@ public class do_iFlyVoice_Model extends DoSingletonModule implements do_iFlyVoic
 		 * 识别回调错误.
 		 */
 		public void onError(SpeechError error) {
-			try {
-				JSONObject _result = new JSONObject();
-				_result.put("errorMsg", error.getPlainDescription(true));
-				invokeResult.setResultNode(_result);
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
+			invokeResult.setError(error.getPlainDescription(true));
 			scriptEngine.callback(callbackFuncName, invokeResult);
 		}
 
@@ -198,7 +326,7 @@ public class do_iFlyVoice_Model extends DoSingletonModule implements do_iFlyVoic
 	 * @param param
 	 * @return
 	 */
-	public void setParam() {
+	public void setIATParam() {
 		// 清空参数
 		mIat.setParameter(SpeechConstant.PARAMS, null);
 		// 设置听写引擎
@@ -220,7 +348,7 @@ public class do_iFlyVoice_Model extends DoSingletonModule implements do_iFlyVoic
 		mIat.setParameter(SpeechConstant.ASR_PTT, "0");
 
 		// 设置音频保存路径，保存音频格式仅为pcm，设置路径为sd卡请注意WRITE_EXTERNAL_STORAGE权限
-		mIat.setParameter(SpeechConstant.ASR_AUDIO_PATH, Environment.getExternalStorageDirectory() + "/iflytek/wavaudio.pcm");
+		mIat.setParameter(SpeechConstant.ASR_AUDIO_PATH, savaPath + "wavaudio.pcm");
 		// 设置听写结果是否结果动态修正，为“1”则在听写过程中动态递增地返回结果，否则只在听写结束之后返回最终结果
 		// iat_dwa_preference
 		// 注：该参数暂时只对在线听写有效
@@ -230,9 +358,16 @@ public class do_iFlyVoice_Model extends DoSingletonModule implements do_iFlyVoic
 	@Override
 	public void dispose() {
 		super.dispose();
-		// 退出时释放连接
-		mIat.cancel();
-		mIat.destroy();
+		if (mIat != null) {
+			// 退出时释放连接
+			mIat.cancel();
+			mIat.destroy();
+		}
+		if (mTts != null) {
+			mTts.stopSpeaking();
+			// 退出时释放连接
+			mTts.destroy();
+		}
 	}
 
 	private String getPingYin(String src) {

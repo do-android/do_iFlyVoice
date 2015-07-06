@@ -75,20 +75,23 @@ public class DoTestActivity extends Activity {
 	 * 测试同步方法
 	 */
 	protected void doTestSyncMethod() {
-
+		Map<String, String>  _paras_loadString = new HashMap<String, String>();
+		_paras_loadString.put("text", "我爱北京天安门，我爱北京天安门2");
+		_paras_loadString.put("role", "xiaoyu");
+		DoService.syncMethod(this.model, "speak", _paras_loadString);
 	}
 
 	/**
 	 * 测试异步方法
 	 */
 	protected void doTestAsyncMethod() {
-		Map<String, String>  _paras_loadString = new HashMap<String, String>();
-        DoService.ansyncMethod(this.model, "open", _paras_loadString, new DoService.EventCallBack() {
-			@Override
-			public void eventCallBack(String _data) {//回调函数
-				DoServiceContainer.getLogEngine().writeDebug("异步方法回调：" + _data);
-			}
-		});
+//		Map<String, String>  _paras_loadString = new HashMap<String, String>();
+//        DoService.ansyncMethod(this.model, "open", _paras_loadString, new DoService.EventCallBack() {
+//			@Override
+//			public void eventCallBack(String _data) {//回调函数
+//				DoServiceContainer.getLogEngine().writeDebug("异步方法回调：" + _data);
+//			}
+//		});
 	}
 
 	/**
