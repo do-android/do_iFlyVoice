@@ -128,17 +128,19 @@ public class do_iFlyVoice_Model extends DoSingletonModule implements do_iFlyVoic
 	private SynthesizerListener mTtsListener = new SynthesizerListener() {
 		@Override
 		public void onSpeakBegin() {
-			getEventCenter().fireEvent("bengin", new DoInvokeResult(getUniqueKey()));
+			getEventCenter().fireEvent("begin", new DoInvokeResult(getUniqueKey()));
 		}
 
 		@Override
 		public void onSpeakPaused() {
-			getEventCenter().fireEvent("paused", new DoInvokeResult(getUniqueKey()));
+			//网络状况较差，不能收到服务器的音频数据或服务器暂停合成而调用的回调函数；
+			//不是用户手动暂停、恢复播放的回调函数
+//			getEventCenter().fireEvent("paused", new DoInvokeResult(getUniqueKey()));
 		}
 
 		@Override
 		public void onSpeakResumed() {
-			getEventCenter().fireEvent("resumed", new DoInvokeResult(getUniqueKey()));
+//			getEventCenter().fireEvent("resumed", new DoInvokeResult(getUniqueKey()));
 		}
 
 		@Override
