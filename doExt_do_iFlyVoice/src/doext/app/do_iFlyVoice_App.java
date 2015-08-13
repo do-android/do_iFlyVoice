@@ -29,4 +29,9 @@ public class do_iFlyVoice_App implements DoIAppDelegate {
 	public String getModuleTypeID() {
 		return "do_iFlyVoice";
 	}
+
+	@Override
+	public String getTypeID() {
+		return getModuleTypeID();
+	}
 }
