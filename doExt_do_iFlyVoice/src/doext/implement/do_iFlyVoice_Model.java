@@ -273,22 +273,39 @@ public class do_iFlyVoice_Model extends DoSingletonModule implements do_iFlyVoic
 		private DoIScriptEngine scriptEngine;
 		private String callbackFuncName;
 		private DoInvokeResult invokeResult;
+		private StringBuffer sb;
 
 		public MyListener(DoIScriptEngine _scriptEngine, String _callbackFuncName) {
 			this.scriptEngine = _scriptEngine;
 			this.callbackFuncName = _callbackFuncName;
 			invokeResult = new DoInvokeResult(do_iFlyVoice_Model.this.getUniqueKey());
+			sb = new StringBuffer();
 
 		}
 
 		public void onResult(RecognizerResult results, boolean isLast) {
-			if (isLast)
+			if (isLast) {
+				String _result = sb.toString();
+				if (sb.length() > 0) {
+					_result = sb.substring(1);
+				}
+				callBack(_result);
 				return;
+			}
+			String _text = "";
 			try {
-				String _text = parseIatResult(results.getResultString());
+				_text = parseIatResult(results.getResultString());
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+			sb.append("，" + _text);
+		}
+
+		public void callBack(String result) {
+			try {
 				JSONObject _result = new JSONObject();
-				_result.put("result", _text);
-				_result.put("spell", getPingYin(_text));
+				_result.put("result", result);
+				_result.put("spell", getPingYin(result));
 				invokeResult.setResultNode(_result);
 			} catch (JSONException e) {
 				e.printStackTrace();
